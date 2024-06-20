@@ -1,5 +1,8 @@
 package jp.jaxa.iss.kibo.rpc.defaultapk;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import gov.nasa.arc.astrobee.Result;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
@@ -11,7 +14,7 @@ import gov.nasa.arc.astrobee.types.Quaternion;
  */
 
 public class YourService extends KiboRpcService {
-    private final String[] TEMPLATE_NAMES = {
+    private String[] TEMPLATE_NAMES = {
             "beaker",
             "goggle",
             "hammer",
@@ -23,6 +26,8 @@ public class YourService extends KiboRpcService {
             "watch",
             "wrench"
     };
+
+    private ArrayList<String> availableTemplates = new ArrayList<>();
 
     private Point[] targetPoints = {
             new Point(10.55d, -9.92284d, 4.7d),
@@ -60,12 +65,14 @@ public class YourService extends KiboRpcService {
     };
     private Quaternion targetQ4 = new Quaternion(0f, 0f, -0.707f, 0.707f);
 
-    private int[] randomItems = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5 };
+    private int[] randomItems = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 5 };
 
     @Override
     protected void runPlan1() {
         // The mission starts.
         api.startMission();
+
+        availableTemplates.addAll(Arrays.asList(TEMPLATE_NAMES));
 
         // go to end
         for (Point p : targetPoints) {
@@ -74,10 +81,10 @@ public class YourService extends KiboRpcService {
             move(p, q);
         }
 
-        api.setAreaInfo(1, TEMPLATE_NAMES[getRandomNumber(0, 10)], randomItems[getRandomNumber(1, randomItems.length)]);
-        api.setAreaInfo(2, TEMPLATE_NAMES[getRandomNumber(0, 10)], randomItems[getRandomNumber(1, randomItems.length)]);
-        api.setAreaInfo(3, TEMPLATE_NAMES[getRandomNumber(0, 10)], randomItems[getRandomNumber(1, randomItems.length)]);
-        api.setAreaInfo(4, TEMPLATE_NAMES[getRandomNumber(0, 10)], randomItems[getRandomNumber(1, randomItems.length)]);
+        api.setAreaInfo(1, getRandomTemplate(), randomItems[getRandomNumber(1, randomItems.length)]);
+        api.setAreaInfo(2, getRandomTemplate(), randomItems[getRandomNumber(1, randomItems.length)]);
+        api.setAreaInfo(3, getRandomTemplate(), randomItems[getRandomNumber(1, randomItems.length)]);
+        api.setAreaInfo(4, getRandomTemplate(), randomItems[getRandomNumber(1, randomItems.length)]);
 
         api.reportRoundingCompletion();
         api.notifyRecognitionItem();
@@ -123,8 +130,13 @@ public class YourService extends KiboRpcService {
         // write your plan 3 here.
     }
 
-    public int getRandomNumber(int min, int max) {
+    private int getRandomNumber(int min, int max) {
         return (int) ((Math.random() * (max - min)) + min);
+    }
+
+    private String getRandomTemplate() {
+        int random = getRandomNumber(0, availableTemplates.size());
+        return availableTemplates.remove(random);
     }
 
     private void move(Point point, Quaternion quaternion) {
