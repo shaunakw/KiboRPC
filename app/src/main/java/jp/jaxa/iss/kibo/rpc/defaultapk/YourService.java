@@ -59,22 +59,51 @@ public class YourService extends KiboRpcService {
     private Mat cameraMatrix = new Mat(3, 3, CvType.CV_64F);
     private Mat cameraCoefficients = new Mat(1, 5, CvType.CV_64F);
 
+    private Point[] targetPoints = {
+            new Point(10.9d, -9.92284d, 5.195d),
+            new Point(11.235d, -9.5d, 5.295d),
+            new Point(10.925d, -8.875d, 4.6d),
+            new Point(10.925d, -7.925d, 4.7d),
+            new Point(10.56d, -7.4d, 4.62d),
+            new Point(10.925d, -6.8525d, 4.945d)
+    };
+
+    private Quaternion[] targetQuats = {
+            new Quaternion(0f, 0f, -0.707f, 0.707f), // area 1
+            new Quaternion(0f, 0f, -0.707f, 0.707f),
+            new Quaternion(0f, 0.707f, 0f, 0.707f), // area 2
+            new Quaternion(0f, 0.707f, 0f, 0.707f), // area 3
+            new Quaternion(0f, 0.707f, 0f, 0.707f),
+            new Quaternion(0f, 1f, 0f, 0f) // area 4
+    };
+
     @Override
     protected void runPlan1() {
+        // The mission starts.
+        api.startMission();
+
         // setup
         setupCamera();
         loadTemplateImages();
 
-        // The mission starts.
-        api.startMission();
-
         // Move to a point.
-        Point point = new Point(10.9d, -9.92284d, 5.195d);
+        /* Point point = new Point(10.9d, -9.92284d, 5.195d);
         Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
-        move(point, quaternion);
+        move(point, quaternion); */
+
+        // test moving to all points
+        for (int i = 0; i < targetPoints.length; i++) {
+            Point p = targetPoints[i];
+            Quaternion q = targetQuats[i];
+
+            move(p, q);
+            Mat image = api.getMatNavCam();
+            image = undistortImage(image);
+            api.saveMatImage(image, "path_" + i);
+        }
 
         // Get a camera image.
-        scanCamera();
+        // scanCamera();
 
         /* **************************************************** */
         /* Let's move to the each area and recognize the items. */
